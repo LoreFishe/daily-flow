@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Flow — Blanca</title>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Tangerine:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sage:#7C8B6F;
+    --sage-dark:#5C6952;
+    --stone:#A89A87;
+    --brown:#4A3B2E;
+    --gold:#B8934A;
+    --plum:#6B5271;
+    --cream:#F4F0E6;
+    --paper:#FBF9F3;
+    --line:#DDD5C4;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--cream);
+    font-family:'Inter',sans-serif;
+    color:var(--brown);
+    padding:24px 16px 60px;
+  }
+  .wrap{max-width:640px;margin:0 auto;}
+
+  header{text-align:center;margin-bottom:8px;}
+  .quote{
+    font-family:'Tangerine',cursive;
+    font-size:44px;
+    color:var(--sage-dark);
+    line-height:1;
+    margin:0;
+  }
+  .subquote{
+    font-family:'EB Garamond',serif;
+    font-style:italic;
+    font-size:14px;
+    color:var(--stone);
+    margin:6px 0 18px;
+  }
+  .date-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-family:'EB Garamond',serif;
+    font-size:20px;
+    color:var(--brown);
+    margin-bottom:20px;
+    border-bottom:1px solid var(--line);
+    padding-bottom:10px;
+  }
+  .date-row input{
+    font-family:'EB Garamond',serif;
+    font-size:20px;
+    border:none;
+    background:transparent;
+    color:var(--brown);
+    text-align:right;
+  }
+
+  .wave{
+    height:14px;
+    width:100%;
+    margin:22px 0 18px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='14' viewBox='0 0 120 14'%3E%3Cpath d='M0 7 Q15 0 30 7 T60 7 T90 7 T120 7' fill='none' stroke='%23B8934A' stroke-width='1.5'/%3E%3C/svg%3E") repeat-x;
+    background-size:120px 14px;
+    opacity:0.6;
+  }
+
+  section{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:18px 18px 14px;
+    margin-bottom:16px;
+  }
+  h2{
+    font-family:'EB Garamond',serif;
+    font-weight:600;
+    font-size:19px;
+    color:var(--sage-dark);
+    margin:0 0 4px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .tag{
+    font-size:11px;
+    font-family:'Inter',sans-serif;
+    color:var(--stone);
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    margin:0 0 12px;
+  }
+
+  .item{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    padding:8px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .item:last-child{border-bottom:none;}
+  .item input[type=checkbox]{
+    appearance:none;
+    width:20px;height:20px;
+    min-width:20px;
+    border:2px solid var(--sage);
+    border-radius:5px;
+    margin-top:2px;
+    cursor:pointer;
+    position:relative;
+    background:var(--paper);
+  }
+  .item input[type=checkbox]:checked{
+    background:var(--sage);
+  }
+  .item input[type=checkbox]:checked::after{
+    content:'';
+    position:absolute;
+    left:5px;top:1px;
+    width:5px;height:10px;
+    border:solid var(--paper);
+    border-width:0 2px 2px 0;
+    transform:rotate(40deg);
+  }
+  .item label{
+    font-size:15px;
+    line-height:1.4;
+    cursor:pointer;
+    flex:1;
+  }
+  .floor-note{
+    font-size:12px;
+    color:var(--stone);
+    font-style:italic;
+    margin-top:2px;
+  }
+
+  textarea, input[type=text]{
+    width:100%;
+    border:1px solid var(--line);
+    background:#fff;
+    border-radius:6px;
+    padding:8px 10px;
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    color:var(--brown);
+    resize:vertical;
+  }
+  textarea{min-height:56px;}
+
+  .visit-row{display:flex;gap:10px;margin-top:6px;}
+  .visit-btn{
+    flex:1;
+    text-align:center;
+    padding:10px;
+    border-radius:8px;
+    border:1.5px solid var(--plum);
+    color:var(--plum);
+    background:#fff;
+    font-size:14px;
+    font-family:'Inter',sans-serif;
+    cursor:pointer;
+    transition:all .15s ease;
+  }
+  .visit-btn.active{
+    background:var(--plum);
+    color:#fff;
+  }
+
+  .timer-box{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+  }
+  .timer-display{
+    font-family:'EB Garamond',serif;
+    font-size:36px;
+    color:var(--gold);
+    min-width:100px;
+  }
+  .timer-buttons{display:flex;gap:8px;}
+  .timer-buttons button{
+    border:none;
+    border-radius:7px;
+    padding:9px 14px;
+    font-size:13px;
+    font-family:'Inter',sans-serif;
+    cursor:pointer;
+    background:var(--gold);
+    color:#fff;
+  }
+  .timer-buttons button.secondary{
+    background:transparent;
+    border:1px solid var(--gold);
+    color:var(--gold);
+  }
+  select{
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:6px 8px;
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+    color:var(--brown);
+    background:#fff;
+  }
+
+  .win-box{
+    background:linear-gradient(135deg, var(--sage) 0%, var(--sage-dark) 100%);
+    border-radius:10px;
+    padding:16px 18px;
+    color:var(--paper);
+  }
+  .win-box h2{color:var(--paper);}
+  .win-box textarea{background:rgba(255,255,255,0.92);}
+
+  .status{
+    text-align:center;
+    font-size:12px;
+    color:var(--stone);
+    margin-top:8px;
+    min-height:14px;
+  }
+
+  footer{
+    text-align:center;
+    font-family:'EB Garamond',serif;
+    font-style:italic;
+    font-size:13px;
+    color:var(--stone);
+    margin-top:26px;
+  }
+
+  @media (max-width:400px){
+    .timer-display{font-size:30px;}
+    .quote{font-size:36px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="quote">I flow with the river of life</p>
+    <p class="subquote">trusting its direction, one gentle step at a time</p>
+  </header>
+
+  <div class="date-row">
+    <span id="dateLabel">—</span>
+    <input type="text" id="moodTag" placeholder="one word for today…" maxlength="20">
+  </div>
+
+  <section id="floorSection">
+    <h2>🌿 The Floor</h2>
+    <p class="tag">not a checklist to earn today — just what already counts</p>
+    <div class="item">
+      <input type="checkbox" id="floor-med">
+      <label for="floor-med">Meditation</label>
+    </div>
+    <div class="item">
+      <input type="checkbox" id="floor-matcha">
+      <label for="floor-matcha">Warm drink, slow moment (matcha)</label>
+    </div>
+    <p class="floor-note">If only these two happen today, today still counts.</p>
+  </section>
+
+  <div class="wave"></div>
+
+  <section>
+    <h2>🦵 Knee — PT & Care</h2>
+    <p class="tag">goal: 0° extension · 125° flexion by your birthday</p>
+    <div class="item">
+      <input type="checkbox" id="knee-pt">
+      <label for="knee-pt">Home PT — assertive, not aggressive</label>
+    </div>
+    <div class="item">
+      <input type="checkbox" id="knee-jacuzzi">
+      <label for="knee-jacuzzi">Jacuzzi (waterproof Band-Aid on)</label>
+    </div>
+    <div class="item">
+      <input type="checkbox" id="knee-ice">
+      <label for="knee-ice">Ice / rest as needed</label>
+    </div>
+    <div class="item">
+      <input type="checkbox" id="knee-walk">
+      <label for="knee-walk">Movement / short walk</label>
+    </div>
+  </section>
+
+  <section>
+    <h2>🧠 Positive Mental Awareness</h2>
+    <p class="tag">no need to force it — just notice it</p>
+    <div class="item">
+      <input type="checkbox" id="mind-checkin">
+      <label for="mind-checkin">Checked in with how I actually feel</label>
+    </div>
+    <div class="item">
+      <input type="checkbox" id="mind-psych">
+      <label for="mind-psych">Psychiatrist search — one small step</label>
+    </div>
+    <textarea id="mind-note" placeholder="What's underneath today, if anything…"></textarea>
+  </section>
+
+  <section>
+    <h2>💜 Connection</h2>
+    <p class="tag">who did today's flow bring you toward?</p>
+    <div class="visit-row">
+      <div class="visit-btn" id="visit-honey">Honey</div>
+      <div class="visit-btn" id="visit-krystn">Krystn</div>
+      <div class="visit-btn" id="visit-dave">Dave</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>🌙 Sleep</h2>
+    <p class="tag">healing + weight-release playlist</p>
+    <div class="item">
+      <input type="checkbox" id="sleep-hypno">
+      <label for="sleep-hypno">Hypnosis playlist tonight</label>
+    </div>
+  </section>
+
+  <section>
+    <h2>⏱ Focus Timer</h2>
+    <p class="tag">structure, not willpower</p>
+    <div class="timer-box">
+      <div class="timer-display" id="timerDisplay">25:00</div>
+      <div>
+        <select id="timerSelect">
+          <option value="25">25 min</option>
+          <option value="15">15 min</option>
+          <option value="10">10 min</option>
+          <option value="5">5 min</option>
+        </select>
+      </div>
+    </div>
+    <div class="timer-buttons" style="margin-top:12px;">
+      <button id="timerStart">Start</button>
+      <button class="secondary" id="timerReset">Reset</button>
+    </div>
+  </section>
+
+  <section class="win-box">
+    <h2>✨ Today's Win</h2>
+    <p class="tag" style="color:#E8E4D8;">the one you'd normally brush off — name it anyway</p>
+    <textarea id="winNote" placeholder="Even meditation + matcha on a hard day counts here…"></textarea>
+  </section>
+
+  <div class="status" id="saveStatus"></div>
+
+  <footer>Whatever comes up is fine — I accept this moment exactly as it is.</footer>
+
+</div>
+
+<script>
+const todayKey = () => {
+  const d = new Date();
+  return 'flow:' + d.toISOString().slice(0,10);
+};
+
+const fieldIds = [
+  'floor-med','floor-matcha',
+  'knee-pt','knee-jacuzzi','knee-ice','knee-walk',
+  'mind-checkin','mind-psych',
+  'sleep-hypno'
+];
+const textIds = ['mind-note','winNote','moodTag'];
+const visitIds = ['visit-honey','visit-krystn','visit-dave'];
+
+let state = {};
+let saveTimeout = null;
+
+function setStatus(msg){
+  const el = document.getElementById('saveStatus');
+  el.textContent = msg;
+  if(msg) setTimeout(()=>{ if(el.textContent===msg) el.textContent=''; }, 1800);
+}
+
+async function loadState(){
+  try{
+    const result = await window.storage.get(todayKey(), false);
+    if(result && result.value){
+      state = JSON.parse(result.value);
+    }
+  }catch(e){
+    state = {};
+  }
+  applyState();
+}
+
+function applyState(){
+  fieldIds.forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.checked = !!state[id];
+  });
+  textIds.forEach(id=>{
+    const el = document.getElementById(id);
+    if(el && state[id]) el.value = state[id];
+  });
+  visitIds.forEach(id=>{
+    const el = document.getElementById(id);
+    if(el && state[id]) el.classList.add('active');
+  });
+}
+
+async function saveState(){
+  clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(async ()=>{
+    try{
+      await window.storage.set(todayKey(), JSON.stringify(state), false);
+      setStatus('saved ✓');
+    }catch(e){
+      setStatus('could not save — try again');
+    }
+  }, 250);
+}
+
+fieldIds.forEach(id=>{
+  const el = document.getElementById(id);
+  if(el) el.addEventListener('change', ()=>{
+    state[id] = el.checked;
+    saveState();
+  });
+});
+
+textIds.forEach(id=>{
+  const el = document.getElementById(id);
+  if(el) el.addEventListener('input', ()=>{
+    state[id] = el.value;
+    saveState();
+  });
+});
+
+visitIds.forEach(id=>{
+  const el = document.getElementById(id);
+  if(el) el.addEventListener('click', ()=>{
+    state[id] = !state[id];
+    el.classList.toggle('active');
+    saveState();
+  });
+});
+
+// date label
+document.getElementById('dateLabel').textContent = new Date().toLocaleDateString('en-US', {
+  weekday:'long', month:'long', day:'numeric'
+});
+
+// Timer
+let timerInterval = null;
+let timerSeconds = 25*60;
+const timerDisplay = document.getElementById('timerDisplay');
+const timerSelect = document.getElementById('timerSelect');
+const timerStart = document.getElementById('timerStart');
+
+function renderTimer(){
+  const m = Math.floor(timerSeconds/60).toString().padStart(2,'0');
+  const s = (timerSeconds%60).toString().padStart(2,'0');
+  timerDisplay.textContent = `${m}:${s}`;
+}
+
+timerSelect.addEventListener('change', ()=>{
+  if(!timerInterval){
+    timerSeconds = parseInt(timerSelect.value)*60;
+    renderTimer();
+  }
+});
+
+timerStart.addEventListener('click', ()=>{
+  if(timerInterval){
+    clearInterval(timerInterval);
+    timerInterval = null;
+    timerStart.textContent = 'Start';
+    return;
+  }
+  timerStart.textContent = 'Pause';
+  timerInterval = setInterval(()=>{
+    timerSeconds--;
+    if(timerSeconds<=0){
+      clearInterval(timerInterval);
+      timerInterval = null;
+      timerStart.textContent = 'Start';
+      timerDisplay.textContent = 'done 🌿';
+      return;
+    }
+    renderTimer();
+  },1000);
+});
+
+document.getElementById('timerReset').addEventListener('click', ()=>{
+  clearInterval(timerInterval);
+  timerInterval = null;
+  timerStart.textContent = 'Start';
+  timerSeconds = parseInt(timerSelect.value)*60;
+  renderTimer();
+});
+
+renderTimer();
+loadState();
+</script>
+</body>
+</html>
