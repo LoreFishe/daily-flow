@@ -267,6 +267,43 @@
     padding:10px 12px;
     margin-bottom:8px;
     font-size:13px;
+    -webkit-touch-callout:none;
+    -webkit-user-select:none;
+    user-select:none;
+  }
+  .history-hint{
+    font-size:11px;
+    font-family:'Inter',sans-serif;
+    font-style:italic;
+    color:var(--stone);
+    text-align:center;
+    margin:0 0 10px;
+  }
+  .h-confirm{
+    display:none;
+    gap:8px;
+    margin-top:10px;
+  }
+  .history-entry.confirming .h-confirm{
+    display:flex;
+  }
+  .h-confirm button{
+    flex:1;
+    border:none;
+    border-radius:7px;
+    padding:8px 10px;
+    font-size:13px;
+    font-family:'Inter',sans-serif;
+    cursor:pointer;
+  }
+  .h-confirm .h-load{
+    background:var(--plum);
+    color:#fff;
+  }
+  .h-confirm .h-cancel{
+    background:transparent;
+    border:1px solid var(--stone);
+    color:var(--stone);
   }
   .history-entry .h-date{
     font-family:'EB Garamond',serif;
@@ -479,11 +516,11 @@ function applyState(){
   });
   textIds.forEach(id=>{
     const el = document.getElementById(id);
-    if(el && state[id]) el.value = state[id];
+    if(el) el.value = state[id] || '';
   });
   visitIds.forEach(id=>{
     const el = document.getElementById(id);
-    if(el && state[id]) el.classList.add('active');
+    if(el) el.classList.toggle('active', !!state[id]);
   });
 }
 
@@ -625,7 +662,8 @@ function renderHistory(){
       return;
     }
 
-    listEl.innerHTML = keys.map(k=>{
+    let html = '<p class="history-hint">press and hold a day to bring it into today</p>';
+    html += keys.map(k=>{
       const dateStr = k.slice(KEY_PREFIX.length);
       let entry = {};
       try{ entry = JSON.parse(localStorage.getItem(k)) || {}; }catch(e){}
@@ -647,10 +685,25 @@ function renderHistory(){
       if(win) parts.push(`<div class="h-line h-win">${win}</div>`);
       if(parts.length === 0) parts.push('<div class="h-line h-empty">nothing logged this day</div>');
 
-      return `<div class="history-entry"><div class="h-date">${label}</div>${parts.join('')}</div>`;
+      return `<div class="history-entry" data-key="${escapeHtml(k)}"><div class="h-date">${label}</div>${parts.join('')}<div class="h-confirm"><button type="button" class="h-load" data-action="load" data-key="${escapeHtml(k)}">Load into today</button><button type="button" class="h-cancel" data-action="cancel">Cancel</button></div></div>`;
     }).join('');
+    listEl.innerHTML = html;
   }catch(e){
     listEl.innerHTML = '<p class="history-empty">could not load history</p>';
+  }
+}
+
+function loadDayIntoToday(key){
+  let pastEntry = {};
+  try{ pastEntry = JSON.parse(localStorage.getItem(key)) || {}; }catch(e){}
+  state = { ...pastEntry };
+  applyState();
+  clearTimeout(saveTimeout);
+  try{
+    localStorage.setItem(todayKey(), JSON.stringify(state));
+    setStatus('loaded into today ✓');
+  }catch(e){
+    setStatus('could not load — try again');
   }
 }
 
@@ -659,6 +712,56 @@ document.getElementById('historyToggle').addEventListener('click', ()=>{
   const open = listEl.classList.toggle('open');
   if(open) renderHistory();
 });
+
+// Long-press a past day to reveal a "load into today" confirmation
+(function(){
+  const listEl = document.getElementById('historyList');
+  let pressTimer = null;
+  const LONG_PRESS_MS = 550;
+
+  function clearConfirming(except){
+    listEl.querySelectorAll('.history-entry.confirming').forEach(el=>{
+      if(el !== except) el.classList.remove('confirming');
+    });
+  }
+
+  function startPress(e){
+    const entry = e.target.closest('.history-entry');
+    if(!entry) return;
+    clearTimeout(pressTimer);
+    pressTimer = setTimeout(()=>{
+      clearConfirming(entry);
+      entry.classList.add('confirming');
+    }, LONG_PRESS_MS);
+  }
+  function cancelPress(){
+    clearTimeout(pressTimer);
+  }
+
+  listEl.addEventListener('touchstart', startPress, {passive:true});
+  listEl.addEventListener('touchend', cancelPress);
+  listEl.addEventListener('touchmove', cancelPress);
+  listEl.addEventListener('touchcancel', cancelPress);
+  listEl.addEventListener('mousedown', startPress);
+  listEl.addEventListener('mouseup', cancelPress);
+  listEl.addEventListener('mouseleave', cancelPress);
+  listEl.addEventListener('contextmenu', (e)=> e.preventDefault());
+
+  listEl.addEventListener('click', (e)=>{
+    const actionBtn = e.target.closest('[data-action]');
+    if(!actionBtn) return;
+    e.preventDefault();
+    const entry = actionBtn.closest('.history-entry');
+    if(actionBtn.dataset.action === 'load'){
+      loadDayIntoToday(actionBtn.dataset.key);
+    }
+    if(entry) entry.classList.remove('confirming');
+  });
+
+  document.addEventListener('click', (e)=>{
+    if(!e.target.closest('.history-entry')) clearConfirming(null);
+  });
+})();
 
 renderTimer();
 loadState();
