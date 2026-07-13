@@ -284,6 +284,19 @@
     font-size:13px;
     font-style:italic;
   }
+  .h-line{
+    color:var(--brown);
+    margin-top:3px;
+    line-height:1.4;
+  }
+  .h-win{
+    font-style:italic;
+    color:var(--sage-dark);
+  }
+  .h-empty{
+    color:var(--stone);
+    font-style:italic;
+  }
 
   footer{
     text-align:center;
@@ -422,7 +435,13 @@
 
 <script>
 const KEY_PREFIX = 'flow:';
-const todayISO = () => new Date().toISOString().slice(0,10);
+function todayISO(){
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
 const todayKey = () => KEY_PREFIX + todayISO();
 
 const fieldIds = [
@@ -574,30 +593,65 @@ function escapeHtml(str){
   }[c]));
 }
 
+const fieldLabels = {
+  'floor-med':'Meditation',
+  'floor-matcha':'Warm drink / matcha',
+  'knee-pt':'Home PT',
+  'knee-jacuzzi':'Jacuzzi',
+  'knee-ice':'Ice / rest',
+  'knee-walk':'Movement / walk',
+  'mind-checkin':'Checked in with feelings',
+  'mind-psych':'Psychiatrist search step',
+  'sleep-hypno':'Hypnosis playlist'
+};
+const visitLabels = {
+  'visit-honey':'Honey',
+  'visit-krystn':'Krystn',
+  'visit-dave':'Dave'
+};
+
 function renderHistory(){
   const listEl = document.getElementById('historyList');
-  const keys = [];
-  for(let i=0; i<localStorage.length; i++){
-    const k = localStorage.key(i);
-    if(k && k.startsWith(KEY_PREFIX)) keys.push(k);
-  }
-  keys.sort().reverse();
+  try{
+    const keys = [];
+    for(let i=0; i<localStorage.length; i++){
+      const k = localStorage.key(i);
+      if(k && k.startsWith(KEY_PREFIX)) keys.push(k);
+    }
+    keys.sort().reverse();
 
-  if(keys.length === 0){
-    listEl.innerHTML = '<p class="history-empty">no past days saved yet</p>';
-    return;
-  }
+    if(keys.length === 0){
+      listEl.innerHTML = '<p class="history-empty">no past days saved yet</p>';
+      return;
+    }
 
-  listEl.innerHTML = keys.map(k=>{
-    const dateStr = k.slice(KEY_PREFIX.length);
-    let entry = {};
-    try{ entry = JSON.parse(localStorage.getItem(k)) || {}; }catch(e){}
-    const label = new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', {
-      weekday:'long', month:'long', day:'numeric', year:'numeric'
-    });
-    const mood = entry.moodTag ? escapeHtml(entry.moodTag) : '';
-    return `<div class="history-entry"><div class="h-date">${label}</div>${mood ? `<div class="h-mood">${mood}</div>` : ''}</div>`;
-  }).join('');
+    listEl.innerHTML = keys.map(k=>{
+      const dateStr = k.slice(KEY_PREFIX.length);
+      let entry = {};
+      try{ entry = JSON.parse(localStorage.getItem(k)) || {}; }catch(e){}
+
+      const parsedDate = new Date(dateStr + 'T00:00:00');
+      const label = isNaN(parsedDate) ? dateStr : parsedDate.toLocaleDateString('en-US', {
+        weekday:'long', month:'long', day:'numeric', year:'numeric'
+      });
+
+      const mood = entry.moodTag ? escapeHtml(entry.moodTag) : '';
+      const done = Object.keys(fieldLabels).filter(id => entry[id]).map(id => fieldLabels[id]);
+      const visited = Object.keys(visitLabels).filter(id => entry[id]).map(id => visitLabels[id]);
+      const win = entry.winNote ? escapeHtml(entry.winNote) : '';
+
+      const parts = [];
+      if(mood) parts.push(`<div class="h-mood">"${mood}"</div>`);
+      if(done.length) parts.push(`<div class="h-line">${escapeHtml(done.join(', '))}</div>`);
+      if(visited.length) parts.push(`<div class="h-line">connected with ${escapeHtml(visited.join(', '))}</div>`);
+      if(win) parts.push(`<div class="h-line h-win">${win}</div>`);
+      if(parts.length === 0) parts.push('<div class="h-line h-empty">nothing logged this day</div>');
+
+      return `<div class="history-entry"><div class="h-date">${label}</div>${parts.join('')}</div>`;
+    }).join('');
+  }catch(e){
+    listEl.innerHTML = '<p class="history-empty">could not load history</p>';
+  }
 }
 
 document.getElementById('historyToggle').addEventListener('click', ()=>{
